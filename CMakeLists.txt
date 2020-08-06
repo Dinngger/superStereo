@@ -35,20 +35,20 @@ find_package(Eigen3 REQUIRED)
 if(NOT Eigen3_FOUND)
    message(FATAL_ERROR "Eigen3 not found.")
 endif()
-# find_package(Pangolin REQUIRED)
-# if(NOT Pangolin_FOUND)
-#    message(FATAL_ERROR "Pangolin not found.")
-# endif()
-# message(STATUS ${EIGEN3_INCLUDE_DIRS})
 
-#LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
-#FIND_PACKAGE(G2O REQUIRED)
-#find_package(CSparse REQUIRED)
-#find_package(Cholmod REQUIRED)
+find_package(PCL 1.7 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 include_directories(
-${PROJECT_SOURCE_DIR}/include
+${PROJECT_SOURCE_DIR}
 ${EIGEN3_INCLUDE_DIR}
 # ${Pangolin_INCLUDE_DIRS}
 #${G2O_INCLUDE_DIR}
@@ -65,16 +65,34 @@ link_directories(
 
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-aux_source_directory(src/ PROJ_SRC)
-
 add_executable(matchingTest
 matchingTest.cc
-${PROJ_SRC}
 )
 
 target_link_libraries(matchingTest
-# ${Pangolin_LIBRARIES}
 ${OpenCV_LIBS}
-#${G2O_LIBS}
-#${CHOLMOD_LIBRARIES}
+)
+
+add_executable(open3d
+open3d.cc
+)
+
+target_link_libraries(open3d
+${OpenCV_LIBS}
+)
+
+add_executable(open3d_ndt
+open3d_ndt.cc
+)
+
+target_link_libraries(open3d_ndt
+${OpenCV_LIBS}
+)
+
+add_executable(main_NDTmap
+main_NDTmap.cpp
+)
+
+target_link_libraries(main_NDTmap
+${PCL_LIBRARIES}
 )
