@@ -47,6 +47,10 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+find_package(CUDA REQUIRED)
+include_directories(/usr/local/cuda-10.2/include)
+link_directories(/usr/local/cuda-10.2/lib64)
+
 include_directories(
 ${PROJECT_SOURCE_DIR}
 ${EIGEN3_INCLUDE_DIR}
@@ -89,10 +93,26 @@ target_link_libraries(open3d_ndt
 ${OpenCV_LIBS}
 )
 
+add_executable(open3d_ndt_array
+open3d_ndt_array.cc
+)
+
+target_link_libraries(open3d_ndt_array
+${OpenCV_LIBS}
+)
+
 add_executable(main_NDTmap
 main_NDTmap.cpp
 )
 
 target_link_libraries(main_NDTmap
 ${PCL_LIBRARIES}
+)
+
+cuda_add_executable(open3d_cuda
+open3d_cuda.cpp
+)
+
+target_link_libraries(open3d_cuda
+${OpenCV_LIBS}
 )

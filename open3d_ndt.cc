@@ -39,7 +39,7 @@ union voxelIdx {
     }
     voxelIdx(Vector3d p) {
         for (int i=0; i<3; i++)
-            list[i] = p(i);
+            list[i] = floor(p(i));
     }
     bool operator == (const voxelIdx& rhs) {
         return elem.x == rhs.elem.x && elem.y == rhs.elem.y && elem.z == rhs.elem.z;
@@ -65,23 +65,6 @@ union voxelIdx {
 
 inline bool operator < (const voxelIdx& lhs, const voxelIdx& rhs) {
     return (lhs.elem.x < rhs.elem.x) || (lhs.elem.x == rhs.elem.x && lhs.elem.y < rhs.elem.y) || (lhs.elem.x == rhs.elem.x && lhs.elem.y == rhs.elem.y && lhs.elem.z < rhs.elem.z);
-}
-
-template <int GEOHASH_WIDTH>
-uint32_t coordinate2Geohash(float x, float lb, float ub) {
-	uint32_t tempGeohash = 0;
-    float sepPoint;
-    for(uint8_t i = 0; i < GEOHASH_WIDTH; i++) {
-        tempGeohash <<= 1;
-        sepPoint = (lb + ub) / 2;
-        if (x >= sepPoint) {
-            tempGeohash |= 1;
-            lb = sepPoint;
-        } else {
-            ub = sepPoint;
-        }
-    }
-    return tempGeohash;
 }
 
 std::map<voxelIdx, uint32_t> idx;
@@ -140,13 +123,24 @@ void drawGuass(Mat& img, double weight, const Matrix3d cam_r, const Vector3d cam
     cout << "cnt: " << sumcnt << endl;
 }
 
-int main() {
-    fstream f("../ndtmap.csv", ios::in);
+int main(int argc, char** argv) {
+    string filename = "../ndtmap_2.csv";
+    if (argc > 1)
+        filename = string(argv[1]);
+    fstream f(filename, ios::in);
     f.exceptions(fstream::failbit);
     if(!f.is_open()) {
         printf("Failed to open;\n");
     }
     uint32_t cnt = 0;
+    Vector3d map_center = Vector3d(-11278.500000, -2598.000000, 6.000000);
+    if (argc > 2) {
+        for (int i=0; i<3; i++)
+            map_center(i) = atof(argv[2+i]);
+    }
+    for (int i=0; i<3; i++)
+        f >> shift(i);
+    shift -= map_center;
     while (true) {
         try {
             voxelIdx _idx;
@@ -154,15 +148,9 @@ int main() {
                 f >> _idx.list[i];
             Vector3d mean;
             Matrix3d cov;
-            Vector3d _shift;
-            for (int i=0; i<3; i++)
-                f >> _shift(i);
-            _shift = _shift - 1.5 * Vector3d(_idx.elem.x, _idx.elem.y, _idx.elem.z) - Vector3d(0.75, 0.75, 0.75);
-            if ((_shift - shift).norm() > 0.01)
-                printf("none equal shift!\n");
-            shift = _shift;
             for (int i=0; i<3; i++)
                 f >> mean(i);
+            mean -= map_center;
             for (int i=0; i<3; i++)
                 for (int j=0; j<3; j++)
                     f >> cov(i, j);
